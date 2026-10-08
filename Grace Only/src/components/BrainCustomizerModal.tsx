@@ -506,7 +506,7 @@ export default function BrainCustomizerModal({
                   Profile Photo & Headshot
                 </h3>
                 <p className="text-xs text-slate-500 mb-5">
-                  Direct file upload from your device (PNG, JPG, or WebP). Upload your preferred headshot or cutout with zero AI processing or external modification.
+                  Upload an image from your device or paste a public image URL, including a Cloudinary delivery link. The image preview updates as you edit.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center gap-6">
@@ -550,18 +550,22 @@ export default function BrainCustomizerModal({
                       </button>
                     </div>
 
-                    {/* Image URL fallback */}
+                    {/* Public image URL, including Cloudinary delivery URLs */}
                     <div className="mt-3">
-                      <label className="text-[11px] font-bold text-slate-500 block mb-1">
-                        Or enter Image URL:
+                      <label htmlFor="profile-image-url" className="text-[11px] font-bold text-slate-500 block mb-1">
+                        Or paste an image link (Cloudinary supported):
                       </label>
                       <input
-                        type="text"
+                        id="profile-image-url"
+                        type="url"
                         value={config.photoUrl}
                         onChange={(e) => setConfig({ ...config, photoUrl: e.target.value })}
-                        placeholder="https://example.com/photo.jpg"
+                        placeholder="https://res.cloudinary.com/your-cloud/image/upload/photo.jpg"
                         className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-pink-500"
                       />
+                      <p className="mt-1 text-[10px] text-slate-400">
+                        Use a publicly accessible image URL. Click “Save Changes” to keep it.
+                      </p>
                     </div>
                   </div>
                 </div>

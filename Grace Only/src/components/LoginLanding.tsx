@@ -81,25 +81,25 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className="w-full relative z-10"
         >
-          <div className="bg-white/95 rounded-2xl border-2 border-amber-400/90 shadow-xl overflow-hidden backdrop-blur-md">
+          <div className="bg-white/95 rounded-2xl border-2 border-red-600 shadow-xl shadow-red-950/20 overflow-hidden backdrop-blur-md">
             
             {/* Caution Hazard Top Stripe */}
             <div 
-              className="h-2 w-full opacity-90"
+              className="h-2 w-full"
               style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #1e293b 10px, #1e293b 20px)'
+                backgroundImage: 'repeating-linear-gradient(45deg, #dc2626, #dc2626 10px, #450a0a 10px, #450a0a 20px)'
               }}
             />
 
             <div className="p-5 sm:p-6">
               
               {/* WARNING: GRACE ONLY Header Banner */}
-              <div className="bg-amber-50 border border-amber-300/80 rounded-xl py-2 px-3 mb-4 flex items-center justify-center gap-2 shadow-2xs">
-                <AlertTriangle size={17} className="text-amber-600 shrink-0 animate-pulse" />
-                <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-amber-950 uppercase">
+              <div role="note" className="bg-red-600 border border-red-800 rounded-xl py-2.5 px-3 mb-4 flex items-center justify-center gap-2 shadow-md shadow-red-900/25">
+                <AlertTriangle size={18} className="text-white shrink-0 animate-pulse" />
+                <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-white uppercase">
                   WARNING: GRACE ONLY
                 </span>
-                <AlertTriangle size={17} className="text-amber-600 shrink-0 animate-pulse" />
+                <AlertTriangle size={18} className="text-white shrink-0 animate-pulse" />
               </div>
 
               {/* Form: Username + Password + Arrow to sign in */}
