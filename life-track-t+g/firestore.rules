@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Connection test document
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // Tracker documents for planner persistence (habits, schedule, period, activities, brainConfig, theme)
+    match /trackers/{trackerId} {
+      allow read, write: if trackerId in ['grace', 'period', 'activities', 'brainConfig', 'theme', 'connection'];
+    }
+
+    // Fallback default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
