@@ -43,7 +43,7 @@ export interface FirebaseAllData {
  * Loads all stored planner documents from Firestore.
  */
 export async function loadAllFromFirebase(): Promise<FirebaseAllData | null> {
-  if (!isFirebaseConfigured) return null;
+  if (!isFirebaseConfigured || !db) return null;
 
   try {
     setSyncState('syncing', 'Connecting to cloud database...');
@@ -103,7 +103,7 @@ export async function loadAllFromFirebase(): Promise<FirebaseAllData | null> {
  * Save user task and habit data to Firestore.
  */
 export async function saveUserDataToFirebase(data: UserData): Promise<void> {
-  if (!isFirebaseConfigured) return;
+  if (!isFirebaseConfigured || !db) return;
   setSyncState('syncing', 'Saving planner to cloud...');
   try {
     await setDoc(doc(db, 'trackers', 'grace'), {
@@ -122,7 +122,7 @@ export async function saveUserDataToFirebase(data: UserData): Promise<void> {
  * Save menstrual cycle tracker data to Firestore.
  */
 export async function savePeriodDataToFirebase(data: PeriodData): Promise<void> {
-  if (!isFirebaseConfigured) return;
+  if (!isFirebaseConfigured || !db) return;
   setSyncState('syncing', 'Saving cycle data...');
   try {
     await setDoc(doc(db, 'trackers', 'period'), {
@@ -141,7 +141,7 @@ export async function savePeriodDataToFirebase(data: PeriodData): Promise<void> 
  * Save calendar events to Firestore.
  */
 export async function saveActivitiesToFirebase(activities: Activity[]): Promise<void> {
-  if (!isFirebaseConfigured) return;
+  if (!isFirebaseConfigured || !db) return;
   setSyncState('syncing', 'Saving events...');
   try {
     await setDoc(doc(db, 'trackers', 'activities'), {
@@ -158,7 +158,7 @@ export async function saveActivitiesToFirebase(activities: Activity[]): Promise<
  * Save custom profile photo, titles, and 5 icon popup configurations to Firestore.
  */
 export async function saveBrainConfigToFirebase(config: ProfileConfig): Promise<void> {
-  if (!isFirebaseConfigured) return;
+  if (!isFirebaseConfigured || !db) return;
   setSyncState('syncing', 'Saving profile customizations...');
   try {
     await setDoc(doc(db, 'trackers', 'brainConfig'), {
@@ -177,7 +177,7 @@ export async function saveBrainConfigToFirebase(config: ProfileConfig): Promise<
  * Save active theme preference to Firestore.
  */
 export async function saveThemeToFirebase(theme: ThemeColor): Promise<void> {
-  if (!isFirebaseConfigured) return;
+  if (!isFirebaseConfigured || !db) return;
   setSyncState('syncing', 'Saving theme...');
   try {
     await setDoc(doc(db, 'trackers', 'theme'), {
