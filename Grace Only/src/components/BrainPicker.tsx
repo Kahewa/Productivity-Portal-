@@ -258,12 +258,9 @@ export default function BrainPicker({
 
       {/* Profile Title Text Banner */}
       <div className="mt-1 text-center flex flex-col items-center">
-        <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800">
-          {config.profileTitle}
-        </h2>
         <motion.button
           onClick={toggleOpen}
-          className="mt-2 flex items-center gap-1.5 text-pink-600 bg-transparent border-0 cursor-pointer"
+          className="flex items-center gap-1.5 text-pink-600 bg-transparent border-0 cursor-pointer"
           animate={isOpen ? { y: 0 } : { y: [0, -4, 0] }}
           transition={isOpen ? { duration: 0.2 } : { duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
         >
@@ -274,6 +271,9 @@ export default function BrainPicker({
           <span className="font-serif italic text-base sm:text-lg font-black tracking-wide leading-none">pick my brain</span>
           <span className="text-[10px] sm:text-xs font-bold text-slate-500">{isOpen ? '(tap photo to close)' : '(tap my photo!)'}</span>
         </motion.button>
+        <h2 className="mt-2 text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800">
+          {config.profileTitle}
+        </h2>
 
         {/* Option within app to edit features whenever she wants (hidden when readOnly) */}
         {!readOnly && showEditTrigger && (
