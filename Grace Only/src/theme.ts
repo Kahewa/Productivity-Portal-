@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ThemeColor = 'lavender' | 'rose' | 'ocean' | 'emerald' | 'amber' | 'indigo';
+export type ThemeColor = 'blush' | 'lavender' | 'rose' | 'ocean' | 'emerald' | 'amber' | 'indigo';
 
 export interface ThemeDefinition {
   id: ThemeColor;
@@ -20,9 +20,31 @@ export interface ThemeDefinition {
   progressBg: string;      // e.g. 'bg-violet-600'
   chipBorder: string;      // e.g. 'border-l-violet-600'
   gradient: string;        // e.g. 'from-violet-500 to-purple-600'
+  accent: string;          // hex accent for charts & glass UI
+  accentAlt: string;       // hex second chart series, validated against accent
+  accentThird: string;     // hex third chart series, validated against both
 }
 
 export const THEMES: Record<ThemeColor, ThemeDefinition> = {
+  blush: {
+    id: 'blush',
+    name: 'Blush Glass',
+    previewColor: '#E8358D',
+    primary: 'bg-pink-600',
+    primaryHover: 'hover:bg-pink-700',
+    primaryText: 'text-pink-600',
+    primaryTextLight: 'text-pink-500',
+    bgLight: 'bg-pink-50',
+    borderLight: 'border-pink-200',
+    badgeBg: 'bg-pink-100 text-pink-700',
+    ringFocus: 'focus:border-pink-500 focus:ring-pink-200',
+    progressBg: 'bg-pink-600',
+    chipBorder: 'border-l-pink-600',
+    gradient: 'from-pink-500 to-fuchsia-600',
+    accent: '#E8358D',
+    accentAlt: '#8B5CF6',
+    accentThird: '#D97706'
+  },
   lavender: {
     id: 'lavender',
     name: 'Lavender Mist',
@@ -37,7 +59,10 @@ export const THEMES: Record<ThemeColor, ThemeDefinition> = {
     ringFocus: 'focus:border-violet-500 focus:ring-violet-200',
     progressBg: 'bg-violet-600',
     chipBorder: 'border-l-violet-600',
-    gradient: 'from-violet-500 to-purple-600'
+    gradient: 'from-violet-500 to-purple-600',
+    accent: '#7C3AED',
+    accentAlt: '#EC4899',
+    accentThird: '#D97706'
   },
   rose: {
     id: 'rose',
@@ -53,7 +78,10 @@ export const THEMES: Record<ThemeColor, ThemeDefinition> = {
     ringFocus: 'focus:border-pink-500 focus:ring-pink-200',
     progressBg: 'bg-pink-500',
     chipBorder: 'border-l-pink-500',
-    gradient: 'from-pink-400 to-rose-500'
+    gradient: 'from-pink-400 to-rose-500',
+    accent: '#EC4899',
+    accentAlt: '#8B5CF6',
+    accentThird: '#D97706'
   },
   ocean: {
     id: 'ocean',
@@ -69,7 +97,10 @@ export const THEMES: Record<ThemeColor, ThemeDefinition> = {
     ringFocus: 'focus:border-sky-500 focus:ring-sky-200',
     progressBg: 'bg-sky-600',
     chipBorder: 'border-l-sky-600',
-    gradient: 'from-sky-500 to-blue-600'
+    gradient: 'from-sky-500 to-blue-600',
+    accent: '#0284C7',
+    accentAlt: '#E8358D',
+    accentThird: '#D97706'
   },
   emerald: {
     id: 'emerald',
@@ -85,7 +116,10 @@ export const THEMES: Record<ThemeColor, ThemeDefinition> = {
     ringFocus: 'focus:border-emerald-500 focus:ring-emerald-200',
     progressBg: 'bg-emerald-600',
     chipBorder: 'border-l-emerald-600',
-    gradient: 'from-emerald-500 to-teal-600'
+    gradient: 'from-emerald-500 to-teal-600',
+    accent: '#059669',
+    accentAlt: '#8B5CF6',
+    accentThird: '#EA580C'
   },
   amber: {
     id: 'amber',
@@ -101,7 +135,10 @@ export const THEMES: Record<ThemeColor, ThemeDefinition> = {
     ringFocus: 'focus:border-amber-500 focus:ring-amber-200',
     progressBg: 'bg-amber-500',
     chipBorder: 'border-l-amber-500',
-    gradient: 'from-amber-400 to-orange-500'
+    gradient: 'from-amber-400 to-orange-500',
+    accent: '#D97706',
+    accentAlt: '#8B5CF6',
+    accentThird: '#0284C7'
   },
   indigo: {
     id: 'indigo',
@@ -117,8 +154,11 @@ export const THEMES: Record<ThemeColor, ThemeDefinition> = {
     ringFocus: 'focus:border-indigo-500 focus:ring-indigo-200',
     progressBg: 'bg-indigo-600',
     chipBorder: 'border-l-indigo-600',
-    gradient: 'from-indigo-500 to-blue-600'
+    gradient: 'from-indigo-500 to-blue-600',
+    accent: '#4F46E5',
+    accentAlt: '#EC4899',
+    accentThird: '#D97706'
   }
 };
 
-export const DEFAULT_THEME: ThemeColor = 'lavender';
+export const DEFAULT_THEME: ThemeColor = 'blush';

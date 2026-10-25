@@ -389,22 +389,22 @@ export default function BrainCustomizerModal({
   const currentThemeDef = currentIconConfig ? THEME_STYLES[currentIconConfig.colorTheme] : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/30 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.94, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 15 }}
         transition={{ duration: 0.22, ease: 'easeOut' }}
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full h-[90vh] max-h-[850px] flex flex-col overflow-hidden relative"
+        className="glass-strong font-display rounded-3xl max-w-4xl w-full h-[90vh] max-h-[850px] flex flex-col overflow-hidden relative"
       >
         {/* Top Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+        <div className="px-6 py-4 border-b border-white/80 flex items-center justify-between bg-white/40 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center shadow-2xs">
               <Sliders size={18} />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 font-serif">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">
                 Customize Profile & Popups
               </h2>
               <p className="text-xs text-slate-500">
@@ -438,12 +438,12 @@ export default function BrainCustomizerModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 px-4 py-2 bg-slate-100/90 border-b border-slate-200 overflow-x-auto shrink-0 select-none no-scrollbar">
+        <div className="flex items-center gap-1 px-4 py-2 bg-white/30 border-b border-white/80 overflow-x-auto shrink-0 select-none no-scrollbar">
           <button
             onClick={() => setActiveTab('profile')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
               activeTab === 'profile'
-                ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80'
+                ? 'bg-white text-slate-900 shadow-sm border border-white'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
@@ -463,7 +463,7 @@ export default function BrainCustomizerModal({
                 onClick={() => setActiveTab(iconId)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80'
+                    ? 'bg-white text-slate-900 shadow-sm border border-white'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                 }`}
               >
@@ -501,7 +501,7 @@ export default function BrainCustomizerModal({
               ========================================================================= */}
           {activeTab === 'profile' && (
             <div className="max-w-2xl mx-auto space-y-6">
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+              <div className="glass p-6 rounded-3xl">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 mb-1">
                   Profile Photo & Headshot
                 </h3>
@@ -561,7 +561,7 @@ export default function BrainCustomizerModal({
                         value={config.photoUrl}
                         onChange={(e) => setConfig({ ...config, photoUrl: e.target.value })}
                         placeholder="https://res.cloudinary.com/your-cloud/image/upload/photo.jpg"
-                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-pink-500"
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200/70 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-pink-500"
                       />
                       <p className="mt-1 text-[10px] text-slate-400">
                         Use a publicly accessible image URL. Click “Save Changes” to keep it.
@@ -572,7 +572,7 @@ export default function BrainCustomizerModal({
               </div>
 
               {/* Profile Title Text */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+              <div className="glass p-6 rounded-3xl">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 mb-1">
                   Profile Title Banner
                 </h3>
@@ -589,7 +589,7 @@ export default function BrainCustomizerModal({
                     value={config.profileTitle}
                     onChange={(e) => setConfig({ ...config, profileTitle: e.target.value })}
                     placeholder="Kahewa Grace Productivity Profile"
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-pink-500"
+                    className="w-full px-3.5 py-2 bg-white border border-slate-200/70 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-pink-500"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
                     Preview: &quot;{config.profileTitle}&quot;
@@ -627,7 +627,7 @@ export default function BrainCustomizerModal({
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${currentThemeDef.badge}`}>
                           {currentIconConfig.badge}
                         </span>
-                        <h4 className="text-lg font-black text-slate-900 font-serif mt-1">
+                        <h4 className="text-lg font-bold text-slate-900 mt-1">
                           {currentIconConfig.title}
                         </h4>
                         <p className="text-xs text-slate-500">{currentIconConfig.subtitle}</p>
@@ -647,7 +647,7 @@ export default function BrainCustomizerModal({
 
                     <div className="space-y-3">
                       {currentIconConfig.containers.map(container => (
-                        <div key={container.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 text-xs">
+                        <div key={container.id} className="p-3 rounded-xl border border-white/80 bg-white/45 text-xs">
                           {container.title && (
                             <div className="font-bold text-slate-900 text-[11px] uppercase tracking-wider mb-2">
                               {container.title}
@@ -704,7 +704,7 @@ export default function BrainCustomizerModal({
               )}
 
               {/* 1. HEADER & TITLES CONFIG */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs space-y-4">
+              <div className="glass p-6 rounded-3xl space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
@@ -749,7 +749,7 @@ export default function BrainCustomizerModal({
                       value={currentIconConfig.tag}
                       onChange={(e) => updateIconField(activeTab, 'tag', e.target.value)}
                       placeholder="e.g. Socials, Faith, Work"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-pink-500"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200/70 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-pink-500"
                     />
                   </div>
 
@@ -762,7 +762,7 @@ export default function BrainCustomizerModal({
                       value={currentIconConfig.badge}
                       onChange={(e) => updateIconField(activeTab, 'badge', e.target.value)}
                       placeholder="e.g. Visuals & Lifestyle"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-pink-500"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200/70 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-pink-500"
                     />
                   </div>
 
@@ -775,7 +775,7 @@ export default function BrainCustomizerModal({
                       value={currentIconConfig.title}
                       onChange={(e) => updateIconField(activeTab, 'title', e.target.value)}
                       placeholder="e.g. Grace's Social Media"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-pink-500"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200/70 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-pink-500"
                     />
                   </div>
 
@@ -788,7 +788,7 @@ export default function BrainCustomizerModal({
                       value={currentIconConfig.subtitle}
                       onChange={(e) => updateIconField(activeTab, 'subtitle', e.target.value)}
                       placeholder="e.g. Curated aesthetics, daily routines..."
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-pink-500"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200/70 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-pink-500"
                     />
                   </div>
                 </div>
@@ -814,7 +814,7 @@ export default function BrainCustomizerModal({
                   </div>
 
                   {currentIconConfig.quote && (
-                    <div className="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                    <div className="space-y-2 bg-white/45 p-3.5 rounded-xl border border-white/80">
                       <textarea
                         rows={2}
                         value={currentIconConfig.quote.text}
@@ -823,7 +823,7 @@ export default function BrainCustomizerModal({
                           text: e.target.value
                         })}
                         placeholder="Quote text..."
-                        className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-pink-500"
+                        className="w-full p-2 bg-white border border-slate-200/70 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-pink-500"
                       />
                       <input
                         type="text"
@@ -834,7 +834,7 @@ export default function BrainCustomizerModal({
                           author: e.target.value
                         })}
                         placeholder="Author or Scripture citation (optional)"
-                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-pink-500"
+                        className="w-full px-2 py-1 bg-white border border-slate-200/70 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-pink-500"
                       />
                     </div>
                   )}
@@ -891,7 +891,7 @@ export default function BrainCustomizerModal({
                   {currentIconConfig.containers.map((container, cIndex) => (
                     <div
                       key={container.id}
-                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-4"
+                      className="glass p-5 rounded-3xl space-y-4"
                     >
                       {/* Container Top Bar */}
                       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -938,7 +938,7 @@ export default function BrainCustomizerModal({
                           {container.items.map((item) => (
                             <div
                               key={item.id}
-                              className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 space-y-2.5"
+                              className="p-3 bg-white/45 rounded-xl border border-white/80 space-y-2.5"
                             >
                               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                                 {/* Icon selector */}
@@ -947,7 +947,7 @@ export default function BrainCustomizerModal({
                                   <select
                                     value={item.iconType || 'link'}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { iconType: e.target.value })}
-                                    className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800"
+                                    className="w-full px-2 py-1 bg-white border border-slate-200/70 rounded-lg text-xs font-medium text-slate-800"
                                   >
                                     {LINK_ICONS.map(i => (
                                       <option key={i.id} value={i.id}>{i.label}</option>
@@ -963,7 +963,7 @@ export default function BrainCustomizerModal({
                                     value={item.title}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { title: e.target.value })}
                                     placeholder="Instagram, TikTok, etc."
-                                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900"
+                                    className="w-full px-2.5 py-1 bg-white border border-slate-200/70 rounded-lg text-xs font-bold text-slate-900"
                                   />
                                 </div>
 
@@ -975,7 +975,7 @@ export default function BrainCustomizerModal({
                                     value={item.subtitle || ''}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { subtitle: e.target.value })}
                                     placeholder="@bygreys"
-                                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-700"
+                                    className="w-full px-2.5 py-1 bg-white border border-slate-200/70 rounded-lg text-xs text-slate-700"
                                   />
                                 </div>
 
@@ -1000,7 +1000,7 @@ export default function BrainCustomizerModal({
                                     value={item.url || ''}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { url: e.target.value })}
                                     placeholder="https://..."
-                                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs text-blue-600 font-mono"
+                                    className="w-full px-2.5 py-1 bg-white border border-slate-200/70 rounded-lg text-xs text-blue-600 font-mono"
                                   />
                                 </div>
 
@@ -1012,7 +1012,7 @@ export default function BrainCustomizerModal({
                                     value={item.tag || ''}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { tag: e.target.value })}
                                     placeholder="Daily Posts, Connect, etc."
-                                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-600"
+                                    className="w-full px-2.5 py-1 bg-white border border-slate-200/70 rounded-lg text-xs text-slate-600"
                                   />
                                 </div>
                               </div>
@@ -1021,7 +1021,7 @@ export default function BrainCustomizerModal({
 
                           <button
                             onClick={() => handleAddItem(activeTab, container.id, 'links')}
-                            className="w-full py-2 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            className="w-full py-2 bg-white/40 hover:bg-white/70 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           >
                             <Plus size={13} />
                             <span>Add Another Link</span>
@@ -1035,7 +1035,7 @@ export default function BrainCustomizerModal({
                           {container.items.map((item) => (
                             <div
                               key={item.id}
-                              className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 space-y-2"
+                              className="p-3 bg-white/45 rounded-xl border border-white/80 space-y-2"
                             >
                               <div className="flex items-center gap-2">
                                 <div className="w-10">
@@ -1044,7 +1044,7 @@ export default function BrainCustomizerModal({
                                     type="text"
                                     value={item.emoji || '✨'}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { emoji: e.target.value })}
-                                    className="w-full text-center px-1 py-1 bg-white border border-slate-200 rounded-lg text-sm"
+                                    className="w-full text-center px-1 py-1 bg-white border border-slate-200/70 rounded-lg text-sm"
                                   />
                                 </div>
 
@@ -1055,7 +1055,7 @@ export default function BrainCustomizerModal({
                                     value={item.title}
                                     onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { title: e.target.value })}
                                     placeholder="e.g. Worship & Media Team"
-                                    className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900"
+                                    className="w-full px-2.5 py-1 bg-white border border-slate-200/70 rounded-lg text-xs font-bold text-slate-900"
                                   />
                                 </div>
 
@@ -1075,7 +1075,7 @@ export default function BrainCustomizerModal({
                                   value={item.description || ''}
                                   onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { description: e.target.value })}
                                   placeholder="Details, explanation, or role..."
-                                  className="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700"
+                                  className="w-full p-2 bg-white border border-slate-200/70 rounded-lg text-xs text-slate-700"
                                 />
                               </div>
                             </div>
@@ -1083,7 +1083,7 @@ export default function BrainCustomizerModal({
 
                           <button
                             onClick={() => handleAddItem(activeTab, container.id, 'info_list')}
-                            className="w-full py-2 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            className="w-full py-2 bg-white/40 hover:bg-white/70 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           >
                             <Plus size={13} />
                             <span>Add Another Info Point</span>
@@ -1098,19 +1098,19 @@ export default function BrainCustomizerModal({
                             {container.items.map((item) => (
                               <div
                                 key={item.id}
-                                className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2"
+                                className="p-2.5 bg-white/45 rounded-xl border border-white/80 flex items-center gap-2"
                               >
                                 <input
                                   type="text"
                                   value={item.emoji || '✨'}
                                   onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { emoji: e.target.value })}
-                                  className="w-8 text-center py-1 bg-white border border-slate-200 rounded-lg text-xs"
+                                  className="w-8 text-center py-1 bg-white border border-slate-200/70 rounded-lg text-xs"
                                 />
                                 <input
                                   type="text"
                                   value={item.title}
                                   onChange={(e) => handleUpdateItem(activeTab, container.id, item.id, { title: e.target.value })}
-                                  className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800"
+                                  className="flex-1 px-2 py-1 bg-white border border-slate-200/70 rounded-lg text-xs font-bold text-slate-800"
                                 />
                                 <button
                                   onClick={() => handleRemoveItem(activeTab, container.id, item.id)}
@@ -1124,7 +1124,7 @@ export default function BrainCustomizerModal({
 
                           <button
                             onClick={() => handleAddItem(activeTab, container.id, 'cards')}
-                            className="w-full py-2 bg-slate-50 hover:bg-slate-100 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            className="w-full py-2 bg-white/40 hover:bg-white/70 border border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                           >
                             <Plus size={13} />
                             <span>Add Grid Card</span>
@@ -1155,7 +1155,7 @@ export default function BrainCustomizerModal({
                               }));
                             }}
                             placeholder="Write your note, scripture verse, or biography here..."
-                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 leading-relaxed focus:outline-none focus:border-pink-500"
+                            className="w-full p-2.5 bg-white border border-slate-200/70 rounded-xl text-xs text-slate-800 leading-relaxed focus:outline-none focus:border-pink-500"
                           />
                         </div>
                       )}
@@ -1164,7 +1164,7 @@ export default function BrainCustomizerModal({
                   ))}
 
                   {currentIconConfig.containers.length === 0 && (
-                    <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-slate-500 text-xs">
+                    <div className="py-8 text-center bg-white/40 rounded-2xl border border-dashed border-slate-300 text-slate-500 text-xs">
                       No containers yet. Click one of the buttons above to add a Link List, Info Points, Grid Cards, or Text Note!
                     </div>
                   )}
@@ -1177,11 +1177,11 @@ export default function BrainCustomizerModal({
         </div>
 
         {/* Bottom Actions Bar */}
-        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-white/80 bg-white/40 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowResetConfirm(true)}
-              className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-white/70 hover:bg-rose-50 text-rose-600 border border-white hover:border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw size={13} />
               <span>Reset to Defaults</span>
@@ -1189,14 +1189,14 @@ export default function BrainCustomizerModal({
 
             <button
               onClick={handleExport}
-              className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 bg-white/70 hover:bg-white text-slate-700 border border-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Download backup file"
             >
               <Download size={13} />
               <span>Export</span>
             </button>
 
-            <label className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+            <label className="px-3 py-1.5 bg-white/70 hover:bg-white text-slate-700 border border-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
               <FileUp size={13} />
               <span>Import</span>
               <input type="file" onChange={handleImport} accept=".json" className="hidden" />
@@ -1213,7 +1213,7 @@ export default function BrainCustomizerModal({
 
             <button
               onClick={handleSave}
-              className="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-2 transition-all hover:scale-102 cursor-pointer"
+              className="accent-fill px-6 py-2 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all hover:scale-102 cursor-pointer"
             >
               <Check size={15} />
               <span>Save Changes</span>
@@ -1224,18 +1224,18 @@ export default function BrainCustomizerModal({
         {/* Reset Confirmation Modal */}
         <AnimatePresence>
           {showResetConfirm && (
-            <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+            <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white p-6 rounded-2xl max-w-sm w-full border border-slate-200 shadow-2xl text-center space-y-4"
+                className="glass-strong p-6 rounded-3xl max-w-sm w-full text-center space-y-4"
               >
                 <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
                   <AlertCircle size={24} />
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-slate-900">Reset to Defaults?</h4>
+                  <h4 className="text-base font-bold text-slate-900">Reset to Defaults?</h4>
                   <p className="text-xs text-slate-500 mt-1">
                     This will restore Grace&apos;s original links, scripture, and photo. Any custom modifications will be reset.
                   </p>

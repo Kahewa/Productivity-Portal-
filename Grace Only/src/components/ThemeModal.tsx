@@ -28,27 +28,28 @@ export default function ThemeModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm" onClick={onClose}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          className="glass-strong font-display w-full max-w-md rounded-3xl overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/80">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-slate-100 text-slate-700">
+              <div className="p-2 rounded-xl bg-white/80 text-slate-700">
                 <Palette size={18} />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-base">Select Theme</h3>
+                <h3 className="font-semibold text-slate-900 text-base">Select Theme</h3>
                 <p className="text-xs text-slate-500">Customize your planner accent palette</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-white/70 transition-colors"
             >
               <X size={18} />
             </button>
@@ -66,10 +67,10 @@ export default function ThemeModal({
                     onClose();
                   }}
                   className={`
-                    relative p-3.5 rounded-xl border text-left transition-all flex flex-col gap-2.5 group
+                    relative p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-2.5 group
                     ${isSelected 
-                      ? 'border-slate-800 bg-slate-50 ring-2 ring-slate-800/10 shadow-xs' 
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                      ? 'border-white bg-white ring-2 ring-slate-900/70 shadow-sm' 
+                      : 'border-white/80 bg-white/45 hover:bg-white/80'
                     }
                   `}
                 >
@@ -102,10 +103,10 @@ export default function ThemeModal({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
+          <div className="px-6 py-3.5 bg-white/40 border-t border-white/80 flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-white/70 hover:text-slate-800 transition-colors"
             >
               Done
             </button>

@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-serif: "Cormorant Garamond", serif;
   --font-sans: "Outfit", sans-serif;
   --font-body: "Inter", sans-serif;
+  --font-display: "Poppins", sans-serif;
 }
 
 @layer base {
@@ -17,8 +18,43 @@
   }
   body {
     @apply font-body text-slate-800 antialiased;
-    background: #f8fafc;
+    background: #efeaed;
   }
+}
+
+/* Ambient blush backdrop behind the glass shell */
+.ambient-bg {
+  background:
+    radial-gradient(40rem 28rem at 8% 12%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+    radial-gradient(36rem 30rem at 92% 18%, color-mix(in srgb, var(--accent-alt) 16%, transparent), transparent 70%),
+    radial-gradient(48rem 26rem at 55% 100%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 70%),
+    #efeaed;
+}
+
+/* Frosted glass surfaces */
+.glass {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 14px 34px -18px color-mix(in srgb, var(--accent) 35%, rgba(15, 23, 42, 0.25));
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    0 10px 24px -14px rgba(15, 23, 42, 0.22);
+}
+
+.accent-fill {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 82%, white), var(--accent));
+  box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 /* Custom scrollbars */
@@ -38,4 +74,28 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
+}
+
+/* Accountability card: pulses red when things are being left unattended */
+@keyframes health-alert-pulse {
+  0%, 100% {
+    background-color: rgba(255, 241, 242, 0.92);
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45), 0 14px 34px -18px rgba(225, 29, 72, 0.5);
+  }
+  50% {
+    background-color: rgba(254, 205, 211, 0.95);
+    box-shadow: 0 0 0 6px rgba(244, 63, 94, 0), 0 14px 34px -14px rgba(225, 29, 72, 0.7);
+  }
+}
+
+.health-alert {
+  background-color: rgba(255, 241, 242, 0.92);
+  animation: health-alert-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .health-alert {
+    animation: none;
+    background-color: rgba(254, 205, 211, 0.95);
+  }
 }

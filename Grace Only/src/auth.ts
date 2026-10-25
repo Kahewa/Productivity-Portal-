@@ -9,7 +9,6 @@ const USER_LOWER_HASH = '1905bc6ace4c93095432f1a1013002cde5de9e34344d21bde4356f7
 const PASS_HASH = '0bcf34171dfe2cb351a4dca57490c44be4e136106d48b26dc5764700d8156be5'; // SHA-256 for password
 
 const AUTH_KEY = 'grace_session_v1';
-const ONE_HOUR_MS = 60 * 60 * 1000; // 1 hour session duration
 
 async function sha256(message: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(message);
@@ -21,7 +20,6 @@ async function sha256(message: string): Promise<string> {
 export interface SessionInfo {
   authenticated: boolean;
   loginTime: number;
-  expiresAt: number;
   displayName: string;
 }
 
@@ -45,7 +43,6 @@ export async function verifyAndLogin(userAttempt: string, passAttempt: string): 
     const session: SessionInfo = {
       authenticated: true,
       loginTime: now,
-      expiresAt: now + ONE_HOUR_MS,
       displayName: 'Kahewa Grace'
     };
     try {
@@ -63,14 +60,9 @@ export function getActiveSession(): SessionInfo | null {
   try {
     const raw = localStorage.getItem(AUTH_KEY);
     if (!raw) return null;
+    // Sessions no longer expire: you stay signed in until you lock / log out
     const session: SessionInfo = JSON.parse(raw);
-    const now = Date.now();
-    if (now >= session.expiresAt) {
-      // Expired after 1 hour
-      localStorage.removeItem(AUTH_KEY);
-      return null;
-    }
-    return session;
+    return session.authenticated ? session : null;
   } catch {
     return null;
   }

@@ -36,10 +36,30 @@ export interface Activity {
   category?: 'general' | 'work' | 'health' | 'personal' | 'study';
 }
 
+export type ProjectStatus = 'not_started' | 'in_progress' | 'complete';
+
+export interface ProjectTask {
+  id: string;
+  name: string;
+  status: ProjectStatus;
+  dueDate: string | null; // yyyy-MM-dd, optional
+  completedAt?: string | null; // ISO string, set when marked complete
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  dueDate: string | null; // yyyy-MM-dd, optional
+  tasks: ProjectTask[];
+  createdAt: string; // ISO string
+}
+
 export interface UserData {
   habits: Habit[];
   weeklySchedule: Record<DayOfWeek, DayData>;
   lastResetDate: string; // ISO string
+  projects?: Project[]; // not reset weekly
 }
 
 export interface PeriodData {
@@ -48,4 +68,4 @@ export interface PeriodData {
   cycleLength: number; // default 28
 }
 
-export type ThemeColor = 'lavender' | 'rose' | 'ocean' | 'emerald' | 'amber' | 'indigo';
+export type ThemeColor = 'blush' | 'lavender' | 'rose' | 'ocean' | 'emerald' | 'amber' | 'indigo';

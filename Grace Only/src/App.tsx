@@ -4,42 +4,28 @@
  */
 
 import * as React from 'react';
-import { useState, useEffect, useMemo, Component, ErrorInfo, ReactNode } from 'react';
-import { 
-  startOfWeek, 
-  isSameDay, 
-  parseISO, 
-  format, 
-  startOfToday, 
-  isAfter, 
-  differenceInDays,
-  isWithinInterval
-} from 'date-fns';
+import { useState, useEffect, ErrorInfo, ReactNode } from 'react';
+import { startOfWeek, isSameDay, parseISO, format, startOfToday, differenceInDays } from 'date-fns';
 import { 
   LayoutDashboard, 
   CheckSquare, 
   Calendar as CalendarIcon, 
   Droplets, 
-  LogOut, 
-  Plus, 
-  CheckCircle2, 
-  Sparkles, 
-  Clock, 
+  LogOut,
   ArrowRight,
   ShieldCheck,
   Palette,
   Sliders,
-  Cloud,
-  CloudOff,
-  RefreshCw
+  FolderKanban
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import TaskTracker from './components/TaskTracker';
 import Activities from './components/Activities';
 import PeriodTracker from './components/PeriodTracker';
+import ProjectTracker from './components/ProjectTracker';
 import LoginLanding from './components/LoginLanding';
 import ThemeModal from './components/ThemeModal';
-import BrainPicker from './components/BrainPicker';
+import Dashboard, { SyncBadge, PageId } from './components/Dashboard';
 import BrainCustomizerModal from './components/BrainCustomizerModal';
 import { getBrainConfig, applyRemoteBrainConfig } from './services/brainConfigStorage';
 import { 
@@ -52,7 +38,7 @@ import {
   subscribeSyncStatus, 
   SyncStatus 
 } from './services/firebaseSyncService';
-import { UserData, PeriodData, DayOfWeek, Activity, Task, ThemeColor } from './types';
+import { UserData, PeriodData, DayOfWeek, Activity, ThemeColor } from './types';
 import { THEMES, DEFAULT_THEME } from './theme';
 import { getActiveSession, clearSession, SessionInfo } from './auth';
 
@@ -125,534 +111,48 @@ const INITIAL_ACTIVITIES: Activity[] = [
   { id: 'a2', name: 'Weekly Review', time: '5:00 PM', date: startOfToday().toISOString(), category: 'study' }
 ];
 
-// --- Personal Dashboard Subcomponent ---
-interface PersonalDashboardProps {
-  userData: UserData;
-  periodData: PeriodData;
-  activities: Activity[];
-  onUpdateUserData: (data: UserData) => void;
-  onNavigate: (page: 'dashboard' | 'planner' | 'calendar' | 'period') => void;
-  onActivityClick: (date: string) => void;
-  theme: ThemeColor;
-  avatarSrc: string;
-  onOpenCustomizer: () => void;
-  syncStatus: SyncStatus;
-}
+const NAV_ITEMS: { id: PageId; label: string; short: string; icon: typeof LayoutDashboard }[] = [
+  { id: 'dashboard', label: 'Dashboard', short: 'Home', icon: LayoutDashboard },
+  { id: 'planner', label: 'Habits & Schedule', short: 'Habits', icon: CheckSquare },
+  { id: 'projects', label: 'Projects', short: 'Projects', icon: FolderKanban },
+  { id: 'calendar', label: 'Events', short: 'Events', icon: CalendarIcon },
+  { id: 'period', label: 'Cycle Tracker', short: 'Cycle', icon: Droplets }
+];
 
-function PersonalDashboard({
-  userData,
-  periodData,
-  activities,
-  onUpdateUserData,
-  onNavigate,
-  onActivityClick,
-  theme,
-  avatarSrc,
-  onOpenCustomizer,
-  syncStatus
-}: PersonalDashboardProps) {
-  const [quickTaskText, setQuickTaskText] = useState('');
-  const today = startOfToday();
-  const dayName = format(today, 'EEE') as DayOfWeek;
-  const todaySchedule = userData.weeklySchedule[dayName] || { classes: [], tasks: [] };
-  const themeDef = THEMES[theme] || THEMES.lavender;
-
-  const calculateWeeklyPercentage = () => {
-    if (!userData.habits || userData.habits.length === 0) return 0;
-    const total = userData.habits.length * 7;
-    let completed = 0;
-    const days: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    userData.habits.forEach(habit => {
-      days.forEach(day => {
-        if (habit.completed && habit.completed[day]) completed++;
-      });
-    });
-    return Math.round((completed / total) * 100);
-  };
-
-  const todayCompletedHabitsCount = useMemo(() => {
-    if (!userData.habits) return 0;
-    return userData.habits.filter(h => h.completed && h.completed[dayName]).length;
-  }, [userData.habits, dayName]);
-
-  const upcomingActivities = useMemo(() => {
-    return activities
-      .filter(a => {
-        if (!a || !a.date) return false;
-        try {
-          const d = parseISO(a.date);
-          if (isNaN(d.getTime())) return false;
-          return isAfter(d, today) || isSameDay(d, today);
-        } catch {
-          return false;
-        }
-      })
-      .sort((a, b) => {
-        try {
-          return parseISO(a.date).getTime() - parseISO(b.date).getTime();
-        } catch {
-          return 0;
-        }
-      })
-      .slice(0, 4);
-  }, [activities, today]);
-
-  // Current Cycle Phase Calculation
-  const currentCyclePhase = useMemo(() => {
-    if (!periodData.startDate) return null;
-    try {
-      const start = parseISO(periodData.startDate);
-      const end = periodData.endDate ? parseISO(periodData.endDate) : null;
-      const periodDuration = end ? Math.max(1, differenceInDays(end, start) + 1) : 5;
-      const diff = differenceInDays(today, start);
-      const cycleDay = ((diff % 28) + 28) % 28;
-
-      if (end && isWithinInterval(today, { start, end })) return 'period';
-      if (!end && isSameDay(today, start)) return 'period';
-      if (cycleDay < periodDuration) return 'period';
-      if (cycleDay < 12) return 'follicular';
-      if (cycleDay < 16) return 'ovulation';
-      if (cycleDay < 28) return 'luteal';
-      return 'normal';
-    } catch {
-      return null;
-    }
-  }, [periodData, today]);
-
-  const handleToggleTodayTask = (taskId: string) => {
-    const newSchedule = { ...userData.weeklySchedule };
-    newSchedule[dayName].tasks = newSchedule[dayName].tasks.map(t => 
-      t.id === taskId ? { ...t, completed: !t.completed } : t
-    );
-    onUpdateUserData({ ...userData, weeklySchedule: newSchedule });
-  };
-
-  const handleAddQuickTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickTaskText.trim()) return;
-
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      name: quickTaskText.trim(),
-      completed: false
-    };
-
-    const newSchedule = { ...userData.weeklySchedule };
-    newSchedule[dayName].tasks = [...(newSchedule[dayName].tasks || []), newTask];
-    onUpdateUserData({ ...userData, weeklySchedule: newSchedule });
-    setQuickTaskText('');
-  };
-
-  const weeklyPercent = calculateWeeklyPercentage();
-  const completedTasksToday = todaySchedule.tasks.filter(t => t.completed).length;
-  const totalTasksToday = todaySchedule.tasks.length;
-
+function SidebarButton({
+  active,
+  onClick,
+  icon,
+  label,
+  accent,
+  trailing
+}: {
+  active?: boolean;
+  onClick: () => void;
+  icon: ReactNode;
+  label: string;
+  accent: string;
+  trailing?: ReactNode;
+}) {
   return (
-    <div className="h-full w-full p-4 md:p-8 overflow-y-auto bg-slate-50/50">
-      <div className="max-w-6xl mx-auto space-y-6 pb-24 md:pb-8">
-        
-        {/* Welcome Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 md:p-7 rounded-2xl border border-slate-200/80 shadow-xs relative">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onOpenCustomizer}
-              className="w-14 h-14 shrink-0 flex items-center justify-center rounded-2xl overflow-hidden hover:ring-2 hover:ring-pink-300 transition-all cursor-pointer relative group bg-pink-50/50"
-              title="Click to edit profile & popup features"
-            >
-              <img 
-                src={avatarSrc} 
-                alt="Grace" 
-                referrerPolicy="no-referrer"
-                className="w-14 h-14 object-contain drop-shadow-sm select-none transition-transform group-hover:scale-105"
-              />
-              <span className="absolute -bottom-1 -right-1 p-1 bg-white rounded-full shadow-xs border border-pink-200 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Sliders size={10} className="text-pink-600" />
-              </span>
-            </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Personal Planner</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                <span className="text-xs font-semibold text-slate-500">{themeDef.name}</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mt-1 font-serif">
-                Hello, Grace! ✨
-              </h1>
-              <p className="text-xs md:text-sm text-slate-500 font-medium mt-1">
-                &ldquo;Small daily habits repeated consistently build a meaningful life.&rdquo;
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Cloud Sync Status Indicator */}
-            <div 
-              className="flex items-center rounded-xl text-xs font-bold transition-all"
-              title={syncStatus === 'synced' ? 'All data saved to Firebase cloud' : syncStatus === 'syncing' ? 'Syncing data with Firebase...' : 'Using local cache'}
-            >
-              {syncStatus === 'synced' && (
-                <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                  <Cloud size={13} className="text-emerald-500" />
-                  <span>Cloud Saved</span>
-                </div>
-              )}
-              {syncStatus === 'syncing' && (
-                <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
-                  <RefreshCw size={13} className="text-amber-500 animate-spin" />
-                  <span>Syncing...</span>
-                </div>
-              )}
-              {syncStatus === 'error' && (
-                <div className="flex items-center gap-1.5 text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <CloudOff size={13} className="text-slate-400" />
-                  <span>Offline Saved</span>
-                </div>
-              )}
-              {syncStatus === 'idle' && (
-                <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <Cloud size={13} className="text-slate-400" />
-                  <span>Cloud Connected</span>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={onOpenCustomizer}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-pink-200 bg-pink-50/80 hover:bg-pink-100 text-pink-700 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102"
-              title="Edit profile photo, title, links, containers, and popup colors"
-            >
-              <Sliders size={13} className="text-pink-600" />
-              <span>Customize Profile & Popups</span>
-            </button>
-            <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">
-              {format(today, 'EEEE, MMMM d')}
-            </span>
-          </div>
-        </header>
-
-        {/* Top 3 Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
-          {/* Card 1: Weekly Habits */}
-          <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Weekly Habits</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1">{weeklyPercent}%</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {todayCompletedHabitsCount} of {userData.habits.length} habits done today
-              </p>
-            </div>
-            <div className={`p-3 rounded-xl ${themeDef.bgLight} ${themeDef.primaryText}`}>
-              <CheckCircle2 size={24} />
-            </div>
-          </div>
-
-          {/* Card 2: Today Tasks */}
-          <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Today&apos;s Tasks</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1">
-                {completedTasksToday} / {totalTasksToday}
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {totalTasksToday - completedTasksToday} remaining for {dayName}
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-blue-50 text-blue-600">
-              <CheckSquare size={24} />
-            </div>
-          </div>
-
-          {/* Card 3: Cycle Phase */}
-          <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cycle Tracker</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 capitalize">
-                {currentCyclePhase ? `${currentCyclePhase} Phase` : 'Logged'}
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {periodData.startDate ? 'Cycle tracked' : 'No cycle data recorded'}
-              </p>
-            </div>
-            <div className="p-3 rounded-xl bg-rose-50 text-rose-500">
-              <Droplets size={24} />
-            </div>
-          </div>
-
-        </div>
-
-        {/* 2-Column Main Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Left Column (7 cols): Today's Schedule & Quick Checklist */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            {/* Today's Classes & Time Blocks */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Clock size={18} className="text-slate-500" />
-                  <h3 className="font-bold text-base text-slate-900">
-                    Today&apos;s Focus & Timetable ({dayName})
-                  </h3>
-                </div>
-                <button
-                  onClick={() => onNavigate('planner')}
-                  className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
-                >
-                  <span>Edit in Timetable</span>
-                  <ArrowRight size={13} />
-                </button>
-              </div>
-
-              <div className="space-y-2.5">
-                {todaySchedule.classes.map((cls) => (
-                  <div
-                    key={cls.id}
-                    className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-bold text-sm text-slate-800">{cls.name}</p>
-                      {cls.time && (
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                          <Clock size={11} />
-                          <span>{cls.time}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {todaySchedule.classes.length === 0 && (
-                  <div className="py-6 text-center text-xs text-slate-400">
-                    No time blocks scheduled for today.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Today's Tasks Checklist */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <CheckSquare size={18} className="text-slate-500" />
-                  <h3 className="font-bold text-base text-slate-900">
-                    Today&apos;s Tasks Checklist
-                  </h3>
-                </div>
-                <span className="text-xs font-bold text-slate-400">
-                  {completedTasksToday}/{totalTasksToday} done
-                </span>
-              </div>
-
-              {/* Quick Add Input */}
-              <form onSubmit={handleAddQuickTask} className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={quickTaskText}
-                  onChange={(e) => setQuickTaskText(e.target.value)}
-                  placeholder="Add a task for today..."
-                  className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:bg-white"
-                />
-                <button
-                  type="submit"
-                  className={`px-3 py-2 ${themeDef.primary} ${themeDef.primaryHover} text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs`}
-                >
-                  <Plus size={14} />
-                  <span>Add</span>
-                </button>
-              </form>
-
-              {/* Tasks List */}
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {todaySchedule.tasks.map((task) => (
-                  <label
-                    key={task.id}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => handleToggleTodayTask(task.id)}
-                      className="w-4 h-4 rounded border-slate-300 text-slate-800 focus:ring-slate-400"
-                    />
-                    <span
-                      className={`text-xs ${
-                        task.completed ? 'line-through text-slate-400' : 'font-semibold text-slate-800'
-                      }`}
-                    >
-                      {task.name}
-                    </span>
-                  </label>
-                ))}
-
-                {todaySchedule.tasks.length === 0 && (
-                  <div className="py-6 text-center text-xs text-slate-400">
-                    No tasks for today. Add one above!
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column (5 cols): Habit Progress & Upcoming Events */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* Habits Matrix Snapshot */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={18} className={themeDef.primaryText} />
-                  <h3 className="font-bold text-base text-slate-900">
-                    Habits Matrix Progress
-                  </h3>
-                </div>
-                <button
-                  onClick={() => onNavigate('planner')}
-                  className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
-                >
-                  <span>View All</span>
-                  <ArrowRight size={13} />
-                </button>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mb-4">
-                <div className="flex justify-between text-xs font-bold mb-1">
-                  <span className="text-slate-600">Weekly Consistency</span>
-                  <span className={themeDef.primaryText}>{weeklyPercent}%</span>
-                </div>
-                <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${themeDef.primary} transition-all duration-500 rounded-full`}
-                    style={{ width: `${weeklyPercent}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Habit list preview */}
-              <div className="space-y-2 max-h-52 overflow-y-auto">
-                {userData.habits.map((habit) => {
-                  const isDoneToday = habit.completed && habit.completed[dayName];
-                  return (
-                    <div
-                      key={habit.id}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200"
-                    >
-                      <span className="text-xs font-bold text-slate-800 truncate">
-                        {habit.name}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isDoneToday
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {isDoneToday ? 'Done Today' : 'Pending'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Upcoming Events (Sorted earliest first) */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon size={18} className="text-slate-500" />
-                  <h3 className="font-bold text-base text-slate-900">
-                    Upcoming Events
-                  </h3>
-                </div>
-                <button
-                  onClick={() => onNavigate('calendar')}
-                  className="text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
-                >
-                  <span>Open Calendar</span>
-                  <ArrowRight size={13} />
-                </button>
-              </div>
-
-              <div className="space-y-2.5">
-                {upcomingActivities.map((act) => {
-                  const actDate = parseISO(act.date);
-                  const isActToday = isSameDay(actDate, today);
-
-                  return (
-                    <div
-                      key={act.id}
-                      onClick={() => onActivityClick(act.date)}
-                      className="p-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="font-bold text-xs text-slate-900">{act.name}</p>
-                          {isActToday && (
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-700">
-                              Today
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          {format(actDate, 'MMM d')} • {act.time}
-                        </p>
-                      </div>
-                      <ArrowRight size={13} className="text-slate-400" />
-                    </div>
-                  );
-                })}
-
-                {upcomingActivities.length === 0 && (
-                  <div className="py-6 text-center text-xs text-slate-400">
-                    No upcoming events. Click &quot;Open Calendar&quot; to plan one.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Pick My Brain / Productivity Profile Interactive Card */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col items-center text-center relative overflow-hidden">
-              <div className="w-full flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={18} className="text-pink-500" />
-                  <h3 className="font-bold text-base text-slate-900">
-                    Productivity Profile & Highlights
-                  </h3>
-                </div>
-                <button
-                  onClick={onOpenCustomizer}
-                  className="text-xs font-bold text-pink-600 hover:text-pink-700 flex items-center gap-1 cursor-pointer"
-                >
-                  <span>Edit Studio</span>
-                  <ArrowRight size={13} />
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-500 mb-2">
-                Click your photo to open your 5 life highlights. Tap any icon to view and edit its links, scriptures, containers, and colors.
-              </p>
-
-              <div className="w-full flex justify-center py-2">
-                <BrainPicker size="md" readOnly={false} showEditTrigger={true} />
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] transition-all ${
+        active ? 'glass-strong font-semibold text-slate-900' : 'text-slate-600 hover:bg-white/50 hover:text-slate-900'
+      }`}
+    >
+      <span style={active ? { color: accent } : undefined} className={active ? '' : 'text-slate-400'}>{icon}</span>
+      <span className="flex-1 text-left truncate">{label}</span>
+      {trailing}
+    </button>
   );
 }
+
 
 // --- Main App Root ---
 export function App() {
   const [session, setSession] = useState<SessionInfo | null>(getActiveSession());
-  const [activePage, setActivePage] = useState<'dashboard' | 'planner' | 'calendar' | 'period'>('dashboard');
+  const [activePage, setActivePage] = useState<PageId>('dashboard');
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
 
   // Theme selection state with localStorage persistence
@@ -663,7 +163,7 @@ export function App() {
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false);
 
-  const themeDef = THEMES[theme] || THEMES.lavender;
+  const themeDef = THEMES[theme] || THEMES[DEFAULT_THEME];
 
   // LocalStorage state for data
   const [userData, setUserData] = useState<UserData>(() => {
@@ -719,18 +219,6 @@ export function App() {
       window.removeEventListener('grace_brain_config_updated', handleAvatarUpdate);
     };
   }, []);
-
-  // Session expiry check (every 30 seconds)
-  useEffect(() => {
-    const checkSession = () => {
-      const active = getActiveSession();
-      if (!active && session) {
-        setSession(null);
-      }
-    };
-    const interval = setInterval(checkSession, 30000);
-    return () => clearInterval(interval);
-  }, [session]);
 
   // Sunday / Weekly Reset Logic
   const getResetData = (data: UserData): UserData => {
@@ -884,310 +372,213 @@ export function App() {
   }
 
   return (
-    <div className="h-[100dvh] w-screen flex flex-col overflow-hidden bg-slate-50">
-      
-      {/* Top Navigation Bar - Desktop */}
-      <nav className="hidden md:flex px-6 py-3.5 items-center justify-between border-b border-slate-200/80 bg-white/95 backdrop-blur-xs z-50 shadow-2xs">
-        
-        {/* Brand with Grace Only badge */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 flex items-center justify-center shrink-0">
-            <img 
-              src={avatarSrc} 
-              alt="Grace" 
+    <div
+      className="ambient-bg h-[100dvh] w-screen flex overflow-hidden md:p-4 font-display"
+      style={{ '--accent': themeDef.accent, '--accent-alt': themeDef.accentAlt } as React.CSSProperties}
+    >
+      <div className="flex-1 flex overflow-hidden md:rounded-[28px] md:border md:border-white/80 md:bg-white/35 md:backdrop-blur-xl md:shadow-[0_30px_80px_-30px_rgba(15,23,42,0.35)]">
+
+        {/* Sidebar - Desktop */}
+        <aside className="hidden md:flex w-60 shrink-0 flex-col gap-1 px-4 py-6 border-r border-white/70 bg-white/30 overflow-y-auto">
+          <div className="flex items-center gap-2.5 px-2 mb-7">
+            <img
+              src={avatarSrc}
+              alt="Grace"
               referrerPolicy="no-referrer"
-              className="w-10 h-10 object-contain drop-shadow-xs"
+              className="w-9 h-9 rounded-full object-cover bg-white border border-white shadow-sm"
             />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-serif font-black text-base text-slate-900 tracking-tight block leading-none">
-                Kahewa Grace
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                <ShieldCheck size={11} className="text-slate-500" />
-                Grace Only
-              </span>
+            <div className="min-w-0">
+              <p className="font-semibold text-[15px] text-slate-900 leading-tight truncate">
+                Grace<span style={{ color: themeDef.accent }}>.</span>Planner
+              </p>
+              <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                <ShieldCheck size={10} /> Grace Only
+              </p>
             </div>
-            <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 block">
-              Personal Habit & Life Planner
-            </span>
-          </div>
-        </div>
-
-        {/* Center Nav Tabs */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100/80 border border-slate-200/60">
-          <button
-            onClick={() => setActivePage('dashboard')}
-            className={`
-              flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all text-xs font-bold
-              ${activePage === 'dashboard' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}
-            `}
-          >
-            <LayoutDashboard size={14} />
-            <span>Dashboard</span>
-          </button>
-
-          <button
-            onClick={() => setActivePage('planner')}
-            className={`
-              flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all text-xs font-bold
-              ${activePage === 'planner' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}
-            `}
-          >
-            <CheckSquare size={14} />
-            <span>Habits & Schedule</span>
-          </button>
-
-          <button
-            onClick={() => setActivePage('calendar')}
-            className={`
-              flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all text-xs font-bold
-              ${activePage === 'calendar' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}
-            `}
-          >
-            <CalendarIcon size={14} />
-            <span>Events</span>
-          </button>
-
-          <button
-            onClick={() => setActivePage('period')}
-            className={`
-              flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all text-xs font-bold
-              ${activePage === 'period' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}
-            `}
-          >
-            <Droplets size={14} />
-            <span>Cycle Tracker</span>
-          </button>
-        </div>
-
-        {/* Right Controls: Cloud Status & Customize Popups & Theme Selector & Profile & Logout */}
-        <div className="flex items-center gap-2">
-          
-          {/* Cloud Sync Status Badge */}
-          <div 
-            className="hidden lg:flex items-center rounded-xl text-xs font-bold transition-all"
-            title={syncStatus === 'synced' ? 'All data safely saved to Firebase cloud' : syncStatus === 'syncing' ? 'Syncing data with Firebase...' : 'Using local cache'}
-          >
-            {syncStatus === 'synced' && (
-              <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-200">
-                <Cloud size={13} className="text-emerald-500" />
-                <span>Cloud Saved</span>
-              </div>
-            )}
-            {syncStatus === 'syncing' && (
-              <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200">
-                <RefreshCw size={13} className="text-amber-500 animate-spin" />
-                <span>Syncing...</span>
-              </div>
-            )}
-            {syncStatus === 'error' && (
-              <div className="flex items-center gap-1.5 text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-200">
-                <CloudOff size={13} className="text-slate-400" />
-                <span>Offline Saved</span>
-              </div>
-            )}
-            {syncStatus === 'idle' && (
-              <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
-                <Cloud size={13} className="text-slate-400" />
-                <span>Cloud Ready</span>
-              </div>
-            )}
           </div>
 
-          {/* Customize Features & Popups Studio Button */}
-          <button
-            onClick={() => setIsCustomizerOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-pink-200 bg-pink-50/80 hover:bg-pink-100 text-pink-700 text-xs font-bold transition-all cursor-pointer shadow-2xs hover:scale-102"
-            title="Edit profile photo, title, links, containers, and popup colors"
-          >
-            <Sliders size={13} className="text-pink-600" />
-            <span className="hidden sm:inline">Edit Profile & Popups</span>
-          </button>
-
-          {/* Theme Palette Picker Button */}
-          <button
-            onClick={() => setIsThemeModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-            title="Change color theme"
-          >
-            <div 
-              className="w-3.5 h-3.5 rounded-full shadow-2xs" 
-              style={{ backgroundColor: themeDef.previewColor }} 
+          <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">Overview</p>
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+            <SidebarButton
+              key={id}
+              active={activePage === id}
+              onClick={() => setActivePage(id)}
+              icon={<Icon size={17} />}
+              label={label}
+              accent={themeDef.accent}
             />
-            <span className="hidden xl:inline">{themeDef.name}</span>
-            <Palette size={13} className="text-slate-400" />
-          </button>
+          ))}
 
-          {/* Profile Session Tag */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-bold text-slate-700">Grace</span>
-            <span className="text-[10px] text-slate-400 font-medium">1-hr</span>
+          <p className="px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-1">Studio</p>
+          <SidebarButton
+            onClick={() => setIsCustomizerOpen(true)}
+            icon={<Sliders size={17} />}
+            label="Profile & Popups"
+            accent={themeDef.accent}
+          />
+          <SidebarButton
+            onClick={() => setIsThemeModalOpen(true)}
+            icon={<Palette size={17} />}
+            label={themeDef.name}
+            accent={themeDef.accent}
+            trailing={<span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: themeDef.previewColor }} />}
+          />
+          <div className="px-3.5 py-2">
+            <SyncBadge status={syncStatus} />
           </div>
 
-          {/* Logout button */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
-            title="Lock journal & logout"
-          >
-            <LogOut size={14} />
-            <span className="hidden lg:inline">Lock</span>
-          </button>
-
-        </div>
-      </nav>
-
-      {/* Main Page Content */}
-      <main className="flex-1 relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {activePage === 'dashboard' && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.01 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
+          {/* Weekly reset card */}
+          <div className="mt-auto pt-6">
+            <div className="glass rounded-3xl p-4 text-center">
+              <div className="text-2xl">🗓️</div>
+              <p className="font-semibold text-sm text-slate-900 mt-1">Plan your week</p>
+              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">Tasks reset every Sunday. Map out the days ahead.</p>
+              <button
+                onClick={() => setActivePage('planner')}
+                className="accent-fill mt-3 w-full py-2 rounded-xl text-white text-xs font-semibold flex items-center justify-center gap-1.5"
+              >
+                <ArrowRight size={13} /> Open Schedule
+              </button>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full mt-3 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50/70 transition-colors"
+              title="Lock journal & logout"
             >
-              <PersonalDashboard 
-                userData={userData}
-                periodData={periodData}
-                activities={activities}
-                onUpdateUserData={handleUpdateUserData}
-                onNavigate={setActivePage}
-                onActivityClick={handleActivityClick}
-                theme={theme}
-                avatarSrc={avatarSrc}
-                onOpenCustomizer={() => setIsCustomizerOpen(true)}
-                syncStatus={syncStatus}
-              />
-            </motion.div>
-          )}
+              <LogOut size={14} /> Lock Planner
+            </button>
+          </div>
+        </aside>
 
-          {activePage === 'planner' && (
-            <motion.div
-              key="planner"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.01 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
-            >
-              <TaskTracker 
-                name="Grace"
-                data={userData}
-                onUpdate={handleUpdateUserData}
-                activities={activities}
-                onActivityClick={handleActivityClick}
-                theme={theme}
-              />
-            </motion.div>
-          )}
+        {/* Main Page Content */}
+        <main className="flex-1 relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            {activePage === 'dashboard' && (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, scale: 0.99 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.01 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
+              >
+                <Dashboard
+                  userData={userData}
+                  periodData={periodData}
+                  onUpdateUserData={handleUpdateUserData}
+                  onNavigate={setActivePage}
+                  theme={theme}
+                  avatarSrc={avatarSrc}
+                  onOpenCustomizer={() => setIsCustomizerOpen(true)}
+                  syncStatus={syncStatus}
+                />
+              </motion.div>
+            )}
 
-          {activePage === 'calendar' && (
-            <motion.div
-              key="calendar"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.01 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
-            >
-              <Activities 
-                activities={activities}
-                onUpdate={handleUpdateActivities}
-                highlightDate={highlightDate}
-                onClearHighlight={() => setHighlightDate(null)}
-                theme={theme}
-              />
-            </motion.div>
-          )}
+            {activePage === 'planner' && (
+              <motion.div
+                key="planner"
+                initial={{ opacity: 0, scale: 0.99 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.01 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
+              >
+                <TaskTracker
+                  name="Grace"
+                  data={userData}
+                  onUpdate={handleUpdateUserData}
+                  activities={activities}
+                  onActivityClick={handleActivityClick}
+                  theme={theme}
+                />
+              </motion.div>
+            )}
 
-          {activePage === 'period' && (
-            <motion.div
-              key="period"
-              initial={{ opacity: 0, scale: 0.99 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.01 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
-            >
-              <PeriodTracker 
-                startDate={periodData.startDate}
-                endDate={periodData.endDate}
-                onUpdate={handleUpdatePeriod}
-                theme={theme}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+            {activePage === 'projects' && (
+              <motion.div
+                key="projects"
+                initial={{ opacity: 0, scale: 0.99 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.01 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
+              >
+                <ProjectTracker
+                  data={userData}
+                  onUpdate={handleUpdateUserData}
+                  theme={theme}
+                />
+              </motion.div>
+            )}
+
+            {activePage === 'calendar' && (
+              <motion.div
+                key="calendar"
+                initial={{ opacity: 0, scale: 0.99 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.01 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
+              >
+                <Activities
+                  activities={activities}
+                  onUpdate={handleUpdateActivities}
+                  highlightDate={highlightDate}
+                  onClearHighlight={() => setHighlightDate(null)}
+                  theme={theme}
+                  projects={userData.projects || []}
+                  onOpenProjects={() => setActivePage('projects')}
+                />
+              </motion.div>
+            )}
+
+            {activePage === 'period' && (
+              <motion.div
+                key="period"
+                initial={{ opacity: 0, scale: 0.99 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.01 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-x-0 top-0 bottom-[68px] md:bottom-0"
+              >
+                <PeriodTracker
+                  startDate={periodData.startDate}
+                  endDate={periodData.endDate}
+                  onUpdate={handleUpdatePeriod}
+                  theme={theme}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+      </div>
 
       {/* Bottom Navigation - Mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-2 py-2.5 flex items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-lg">
-        <button
-          onClick={() => setActivePage('dashboard')}
-          className={`flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl ${
-            activePage === 'dashboard' ? 'text-slate-900 font-bold' : 'text-slate-400'
-          }`}
-        >
-          <LayoutDashboard size={20} />
-          <span className="text-[9px] uppercase tracking-wider">Home</span>
-        </button>
-
-        <button
-          onClick={() => setActivePage('planner')}
-          className={`flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl ${
-            activePage === 'planner' ? 'text-slate-900 font-bold' : 'text-slate-400'
-          }`}
-        >
-          <CheckSquare size={20} />
-          <span className="text-[9px] uppercase tracking-wider">Habits</span>
-        </button>
-
-        <button
-          onClick={() => setActivePage('calendar')}
-          className={`flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl ${
-            activePage === 'calendar' ? 'text-slate-900 font-bold' : 'text-slate-400'
-          }`}
-        >
-          <CalendarIcon size={20} />
-          <span className="text-[9px] uppercase tracking-wider">Events</span>
-        </button>
-
-        <button
-          onClick={() => setActivePage('period')}
-          className={`flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl ${
-            activePage === 'period' ? 'text-slate-900 font-bold' : 'text-slate-400'
-          }`}
-        >
-          <Droplets size={20} />
-          <span className="text-[9px] uppercase tracking-wider">Cycle</span>
-        </button>
-
-        <button
-          onClick={() => setIsCustomizerOpen(true)}
-          className="flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl text-pink-500 hover:text-pink-600"
-          title="Customize Profile & Popups Studio"
-        >
-          <Sliders size={20} />
-          <span className="text-[9px] uppercase tracking-wider font-bold">Studio</span>
-        </button>
-
+      <nav className="md:hidden fixed bottom-3 left-3 right-3 z-50 px-1 py-2 flex items-center justify-around rounded-2xl glass-strong">
+        {NAV_ITEMS.map(({ id, short, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActivePage(id)}
+            className={`flex flex-col items-center gap-1 py-1 px-1.5 rounded-xl transition-all ${
+              activePage === id ? 'font-semibold text-slate-900' : 'text-slate-400'
+            }`}
+            style={activePage === id ? { color: themeDef.accent } : undefined}
+          >
+            <Icon size={20} />
+            <span className="text-[9px] uppercase tracking-wider">{short}</span>
+          </button>
+        ))}
         <button
           onClick={() => setIsThemeModalOpen(true)}
-          className="flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl text-slate-400"
+          className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-slate-400"
         >
           <Palette size={20} />
           <span className="text-[9px] uppercase tracking-wider">Theme</span>
         </button>
-
         <button
           onClick={handleLogout}
-          className="flex flex-col items-center gap-1 transition-all py-1 px-2 rounded-xl text-slate-400 hover:text-rose-500"
+          className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-slate-400 hover:text-rose-500"
         >
           <LogOut size={20} />
           <span className="text-[9px] uppercase tracking-wider">Lock</span>

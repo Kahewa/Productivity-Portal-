@@ -8,6 +8,8 @@ import { motion } from 'motion/react';
 import { Lock, User, ArrowRight, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { verifyAndLogin } from '../auth';
 import BrainPicker from './BrainPicker';
+import { THEMES, DEFAULT_THEME } from '../theme';
+import { ThemeColor } from '../types';
 
 interface LoginLandingProps {
   onLoginSuccess: () => void;
@@ -19,6 +21,16 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // The login screen sits outside the app shell, so pick up the saved theme for the glass backdrop
+  const themeDef = (() => {
+    try {
+      const saved = localStorage.getItem('grace_app_theme') as ThemeColor | null;
+      return THEMES[saved || DEFAULT_THEME] || THEMES[DEFAULT_THEME];
+    } catch {
+      return THEMES[DEFAULT_THEME];
+    }
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,31 +52,10 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
   };
 
   return (
-    <div className="min-h-screen w-screen flex flex-col items-center justify-center p-4 py-8 bg-[#faf7f9] relative overflow-x-hidden overflow-y-auto select-none">
-      
-      {/* Crisp Baby Pink Grid Background behind Login Container */}
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-60 z-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, rgba(244, 114, 182, 0.22) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(244, 114, 182, 0.22) 1px, transparent 1px)
-          `,
-          backgroundSize: '24px 24px'
-        }}
-      />
-
-      {/* Soft Vignette Overlay over grid */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          background: 'radial-gradient(circle at center, transparent 35%, rgba(253, 242, 248, 0.75) 100%)'
-        }}
-      />
-
-      {/* Ambient soft baby pink glows */}
-      <div className="fixed top-1/4 -left-20 w-80 h-80 bg-pink-300/20 rounded-full blur-3xl pointer-events-none z-0" />
-      <div className="fixed bottom-1/4 -right-20 w-80 h-80 bg-rose-200/20 rounded-full blur-3xl pointer-events-none z-0" />
+    <div
+      className="ambient-bg font-display min-h-screen h-full w-screen flex flex-col items-center justify-center p-4 py-8 relative overflow-x-hidden overflow-y-auto select-none"
+      style={{ '--accent': themeDef.accent, '--accent-alt': themeDef.accentAlt } as React.CSSProperties}
+    >
 
       {/* Main Container: Generous space for BrainPicker, compact login container */}
       <div className="w-full max-w-sm relative z-10 flex flex-col items-center my-auto">
@@ -81,7 +72,7 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className="w-full relative z-10"
         >
-          <div className="bg-white/95 rounded-2xl border-2 border-red-600 shadow-xl shadow-red-950/20 overflow-hidden backdrop-blur-md">
+          <div className="glass-strong rounded-3xl overflow-hidden">
             
             {/* Caution Hazard Top Stripe */}
             <div 
@@ -94,9 +85,9 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
             <div className="p-5 sm:p-6">
               
               {/* WARNING: GRACE ONLY Header Banner */}
-              <div role="note" className="bg-red-600 border border-red-800 rounded-xl py-2.5 px-3 mb-4 flex items-center justify-center gap-2 shadow-md shadow-red-900/25">
+              <div role="note" className="bg-red-600 rounded-2xl py-2.5 px-3 mb-4 flex items-center justify-center gap-2 shadow-lg shadow-red-600/30">
                 <AlertTriangle size={18} className="text-white shrink-0 animate-pulse" />
-                <span className="font-mono font-black text-xs sm:text-sm tracking-wider text-white uppercase">
+                <span className="font-bold text-xs sm:text-sm tracking-wider text-white uppercase">
                   WARNING: GRACE ONLY
                 </span>
                 <AlertTriangle size={18} className="text-white shrink-0 animate-pulse" />
@@ -118,7 +109,7 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
                     required
                     autoFocus
                     autoComplete="username"
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 transition-all"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200/70 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all"
                   />
                 </div>
 
@@ -135,7 +126,7 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
                       placeholder="Password"
                       required
                       autoComplete="current-password"
-                      className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-100 transition-all"
+                      className="w-full pl-9 pr-9 py-2.5 bg-white border border-slate-200/70 rounded-xl text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 transition-all"
                     />
                     <button
                       type="button"
@@ -153,7 +144,7 @@ export default function LoginLanding({ onLoginSuccess }: LoginLandingProps) {
                     disabled={isLoading}
                     title="Sign in"
                     aria-label="Sign in"
-                    className="h-10 w-11 shrink-0 rounded-xl font-bold text-white bg-slate-900 hover:bg-black active:scale-95 transition-all shadow-md flex items-center justify-center cursor-pointer disabled:opacity-50 group"
+                    className="accent-fill h-11 w-11 shrink-0 rounded-xl font-bold text-white active:scale-95 transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 group"
                   >
                     {isLoading ? (
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

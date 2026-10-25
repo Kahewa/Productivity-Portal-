@@ -169,44 +169,20 @@ export default function BrainPicker({
   return (
     <div className={`relative flex flex-col items-center select-none ${className}`}>
 
-      {/* Main Interactive Stage: Arrow + Frameless Head + 5 Surrounding Items */}
-      <div className="relative flex items-center justify-center p-2 overflow-visible">
-
-        {/* Hand-drawn styled arrow pointing to the head saying "pick my brain" */}
-        <div className="absolute right-full top-1/2 -translate-y-1/2 mr-3 sm:mr-5 flex items-center gap-1.5 sm:gap-2.5 pointer-events-none z-20 whitespace-nowrap">
-          <div className="text-right">
-            <span className="font-serif italic text-base sm:text-lg font-black text-pink-600 tracking-wide block leading-tight drop-shadow-2xs">
-              pick my brain
-            </span>
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 block">
-              {isOpen ? '(click head to close)' : '(click me!)'}
-            </span>
-          </div>
-
-          {/* Curved directional arrow */}
-          <svg 
-            width="46" 
-            height="32" 
-            viewBox="0 0 46 32" 
-            fill="none" 
-            className="text-pink-500 shrink-0 drop-shadow-2xs"
-          >
-            <path 
-              d="M3 16 C14 8, 28 8, 42 16" 
-              stroke="currentColor" 
-              strokeWidth="2.8" 
-              strokeLinecap="round" 
-              strokeDasharray="4 2.5" 
-            />
-            <path 
-              d="M34 9 L43 16 L33 22" 
-              stroke="currentColor" 
-              strokeWidth="2.8" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-            />
-          </svg>
-        </div>
+      {/* Main Interactive Stage: head + 5 orbiting items. Padding reserves room for the orbit so
+          nothing overlaps the title or anything below it when the items fly out. */}
+      <div
+        className="relative flex items-center justify-center overflow-visible"
+        style={{ padding: `${Math.round(radius * 1.08)}px ${Math.round(radius * 1.05)}px ${Math.round(radius * 0.65 + 24)}px` }}
+      >
+        {/* Faint dashed orbit hinting that something lives around the photo */}
+        <motion.div
+          aria-hidden="true"
+          className="absolute rounded-full border-2 border-dashed border-pink-300/60 pointer-events-none"
+          style={{ width: radius * 2.1, height: radius * 2.1, left: '50%', top: '50%', marginLeft: -radius * 1.05, marginTop: -radius * 1.05 + (radius * 1.08 - (radius * 0.65 + 24)) / 2 }}
+          animate={{ rotate: 360, opacity: isOpen ? 0.25 : 0.9 }}
+          transition={{ rotate: { duration: 40, repeat: Infinity, ease: 'linear' }, opacity: { duration: 0.3 } }}
+        />
 
         {/* Center Container Anchor */}
         <div className={`relative ${headSizeClasses} flex items-center justify-center overflow-visible`}>
@@ -281,10 +257,23 @@ export default function BrainPicker({
       </div>
 
       {/* Profile Title Text Banner */}
-      <div className="mt-3.5 text-center flex flex-col items-center">
-        <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 font-sans">
+      <div className="mt-1 text-center flex flex-col items-center">
+        <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800">
           {config.profileTitle}
         </h2>
+        <motion.button
+          onClick={toggleOpen}
+          className="mt-2 flex items-center gap-1.5 text-pink-600 bg-transparent border-0 cursor-pointer"
+          animate={isOpen ? { y: 0 } : { y: [0, -4, 0] }}
+          transition={isOpen ? { duration: 0.2 } : { duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <svg width="18" height="22" viewBox="0 0 18 22" fill="none" className="shrink-0" aria-hidden="true">
+            <path d="M9 20 C6 14, 6 8, 9 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="3 2.5" />
+            <path d="M4 7 L9 2 L14 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="font-serif italic text-base sm:text-lg font-black tracking-wide leading-none">pick my brain</span>
+          <span className="text-[10px] sm:text-xs font-bold text-slate-500">{isOpen ? '(tap photo to close)' : '(tap my photo!)'}</span>
+        </motion.button>
 
         {/* Option within app to edit features whenever she wants (hidden when readOnly) */}
         {!readOnly && showEditTrigger && (
@@ -303,7 +292,7 @@ export default function BrainPicker({
       <AnimatePresence>
         {activePopup && currentActiveIcon && currentActiveTheme && (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs select-auto"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-sm select-auto"
             onClick={() => setActivePopup(null)} // Click anywhere outside to dismiss
           >
             <motion.div
@@ -312,7 +301,7 @@ export default function BrainPicker({
               exit={{ opacity: 0, scale: 0.92, y: 10 }}
               transition={{ type: 'spring', damping: 25, stiffness: 350 }}
               onClick={(e) => e.stopPropagation()} // Prevent dismiss when clicking card
-              className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-w-lg w-full overflow-hidden relative max-h-[90vh] flex flex-col"
+              className="glass-strong font-display rounded-3xl max-w-lg w-full overflow-hidden relative max-h-[90vh] flex flex-col"
             >
               
               {/* Top Controls: Edit this popup button (only in app) + Dismiss X Button */}
@@ -355,7 +344,7 @@ export default function BrainPicker({
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${currentActiveTheme.badge}`}>
                       {currentActiveIcon.badge}
                     </span>
-                    <h3 className="text-xl font-black text-slate-900 font-serif mt-1">
+                    <h3 className="text-xl font-bold text-slate-900 mt-1">
                       {currentActiveIcon.title}
                     </h3>
                     <p className="text-xs text-slate-500">{currentActiveIcon.subtitle}</p>
@@ -396,7 +385,7 @@ export default function BrainPicker({
                               href={linkItem.url || '#'}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors group cursor-pointer"
+                              className="flex items-center justify-between p-3 rounded-xl bg-white/70 hover:bg-white border border-white transition-colors group cursor-pointer"
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-lg ${currentActiveTheme.iconBg} shadow-2xs`}>
@@ -422,7 +411,7 @@ export default function BrainPicker({
 
                       {/* --- Container: Info List / Highlights --- */}
                       {container.type === 'info_list' && (
-                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                        <div className="p-4 rounded-2xl bg-white/50 border border-white space-y-3">
                           {container.items.map((infoItem) => (
                             <div key={infoItem.id} className="flex items-start gap-2.5 text-xs text-slate-700">
                               <span className="text-sm mt-0.5 shrink-0">{infoItem.emoji || '✨'}</span>
@@ -477,7 +466,7 @@ export default function BrainPicker({
               </div>
 
               {/* Footer Dismiss Notice */}
-              <div className={`p-3 bg-slate-50 border-t border-slate-100 flex items-center ${readOnly ? 'justify-center' : 'justify-between'} text-xs text-slate-400 px-6 shrink-0`}>
+              <div className={`p-3 bg-white/40 border-t border-white/80 flex items-center ${readOnly ? 'justify-center' : 'justify-between'} text-xs text-slate-400 px-6 shrink-0`}>
                 {!readOnly && (
                   <button
                     onClick={() => handleOpenCustomizerForCurrent(activePopup)}

@@ -110,6 +110,7 @@ export async function saveUserDataToFirebase(data: UserData): Promise<void> {
       habits: data.habits || [],
       weeklySchedule: data.weeklySchedule || {},
       lastResetDate: data.lastResetDate || new Date().toISOString(),
+      projects: data.projects || [],
     });
     setSyncState('synced', 'Saved to Firebase');
   } catch (err) {
